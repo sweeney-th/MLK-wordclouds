@@ -1,0 +1,133 @@
+
+```{R}
+
+library(dplyr)       # wrangling
+library(wordcloud)   # wordcloud generator 
+library(tm)          # text-mining library
+library(wordcloud2)
+library(stopwords)
+```
+
+```{R}
+
+set.seed(8675309)
+```
+
+```{R}
+
+prepareCorpus <- function(textFile)
+{
+  
+  # read in the textfile
+  rawText <- readLines(textFile)
+  
+  cleanText <- gsub("’s", "", rawText)
+  
+  # create a corpus of words
+  rawCorpus <- VCorpus(VectorSource(cleanText))
+  
+  rawCorpus %>% # pipe raw corpus through cleaning steps
+    tm_map(content_transformer(removePunctuation)) %>%  # remove punctuation
+    tm_map(content_transformer(removeNumbers)) %>%      # remove numbers
+    tm_map(content_transformer(stripWhitespace)) %>%    # remove stop words
+    tm_map(removeWords, stopwords())
+
+}
+```
+
+```{R}
+png("dream.png", width = 12, height = 8, units = 'in', res = 300)
+wordcloud(
+  prepareCorpus("dream.txt"),
+  min.freq = 1,
+  random.order = FALSE,
+  colors = brewer.pal(8,"Dark2")
+)
+```
+![wordcloud](dream.png)
+
+
+```{R}
+png("jail.png", width = 12, height = 8, units = 'in', res = 300)
+wordcloud(
+  prepareCorpus("jail.txt"),
+  min.freq = 1,
+  random.order = FALSE,
+  colors = brewer.pal(8,"Dark2")
+)
+dev.off()
+```
+![wordcloud](jail.png)
+
+```{R}
+
+t <- readLines("dream.txt")
+t <- gsub("\\.", "", t)
+t <- gsub("-", "", t)
+t <- gsub("'s", "", t)
+t <- gsub(",", "", t)
+t <- gsub("!", "", t)
+t <- gsub("?", "", t)
+t <- gsub('"', "", t)
+t <- gsub('“', "", t)
+t <- gsub('”', "", t)
+```
+
+```{R}
+
+countWordInVec <- function(w, v)
+{
+  count <- 0
+  
+  for(item in v){
+    if(item == w){
+      count <- count +1
+    }
+  }
+  count
+}
+
+wordVec <- c()
+
+for(string in t){
+  wordVec <- c(wordVec, strsplit(string, " ")) %>% unlist
+}
+
+finalWords <- c()
+
+toRemove <- c("I", "in", "In")
+for(word in unique(wordVec)){
+  if(!word %in% stopwords::stopwords(language = "en")){
+    if(word != "I"){
+      finalWords <- c(finalWords, word)
+    }
+  }
+}
+
+counts <- c()
+
+for(i in 1:length(finalWords)) {
+  counts[i] <- countWordInVec(finalWords[i], wordVec)
+}
+
+wordFreq <- data.frame(word = unique(finalWords), count = counts)
+```
+
+
+```{R}
+
+wordcloud2(
+  wordFreq,
+  figPath = "mlk.png",
+  size = 0.8,
+  color = "darkblue",
+  backgroundColor = "black"
+)
+```
+
+```{R}
+
+letterCloud(wordFreq, word = "Happy MLK Day!", size = 0.7, backgroundColor = "black")
+```
+
+
